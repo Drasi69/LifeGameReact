@@ -1,6 +1,5 @@
 'use client'
 
-import logo from './logo.svg';
 import './App.css';
 import { useState, useEffect } from 'react';
 
@@ -11,6 +10,89 @@ export default function Home() {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
+
+    function play() {
+      const nextWorld = world.slice();
+      let isModified = false;
+      let n = 0;
+      let deads = [];
+      let lives = [];
+  
+      for (let row = 0; row < maxRow; row++) {
+        for (let col = 0; col < maxCol; col++) {
+          n = getNeighbours(row, col);
+          if (!nextWorld[row][col] && n === 3) {
+            lives.push(new Point(row, col));
+          } else if (nextWorld[row][col] === 'X' && (n < 2 || n > 3)) {
+            deads.push(new Point(row, col));
+          }
+        }
+      }
+  
+      if (lives.length > 0 || deads.length > 0) {
+        isModified = true;
+      }
+  
+      for (let i of lives) {
+        nextWorld[i.getX()][i.getY()] = 'X';
+      }
+  
+      for (let i of deads) {
+        nextWorld[i.getX()][i.getY()] = null;
+      }
+  
+      if (isModified) {
+        handlePlay(nextWorld);
+      }
+    }
+
+    function getNeighbours(row, col) {
+      let num = 0;
+  
+      if (row > 0)
+      {
+          if (col > 0)
+          {
+              if (world[row-1][col-1])
+                  num++;
+          }
+          if (world[row-1][col])
+              num++;
+          if (col < maxCol - 1)
+          {
+              if (world[row-1][col+1])
+                  num++;
+          }
+      }
+      if (col > 0)
+      {
+          if (world[row][col - 1])
+              num++;
+      }
+      if (col < maxCol - 1)
+      {
+          if (world[row][col + 1])
+              num++;
+      }
+      if (row < maxRow - 1)
+      {
+          if (col > 0)
+          {
+              if (world[row + 1][col - 1])
+                  num++;
+          }
+          if (world[row + 1][col])
+              num++;
+          if (col < maxCol - 1)
+          {
+              if (world[row + 1][col + 1])
+                  num++;
+          }
+      }
+  
+      return num;
+    }
+  
     if (isRunning) {
       let timer = setTimeout(() => {
         play();
@@ -20,88 +102,6 @@ export default function Home() {
     }
 
   }, [world, isRunning]);
-
-  function play() {
-    const nextWorld = world.slice();
-    let isModified = false;
-    let n: number = 0;
-    let deads: Point[] = [];
-    let lives: Point[] = [];
-
-    for (var row = 0; row < maxRow; row++) {
-      for (var col = 0; col < maxCol; col++) {
-        n = getNeighbours(row, col);
-        if (!nextWorld[row][col] && n === 3) {
-          lives.push(new Point(row, col));
-        } else if (nextWorld[row][col] === 'X' && (n < 2 || n > 3)) {
-          deads.push(new Point(row, col));
-        }
-      }
-    }
-
-    if (lives.length > 0 || deads.length > 0) {
-      isModified = true;
-    }
-
-    for (let i of lives) {
-      nextWorld[i.getX()][i.getY()] = 'X';
-    }
-
-    for (let i of deads) {
-      nextWorld[i.getX()][i.getY()] = null;
-    }
-
-    if (isModified) {
-      handlePlay(nextWorld);
-    }
-  }
-
-  function getNeighbours(row: number, col: number): number {
-    let num: number = 0;
-
-    if (row > 0)
-    {
-        if (col > 0)
-        {
-            if (world[row-1][col-1])
-                num++;
-        }
-        if (world[row-1][col])
-            num++;
-        if (col < maxCol - 1)
-        {
-            if (world[row-1][col+1])
-                num++;
-        }
-    }
-    if (col > 0)
-    {
-        if (world[row][col - 1])
-            num++;
-    }
-    if (col < maxCol - 1)
-    {
-        if (world[row][col + 1])
-            num++;
-    }
-    if (row < maxRow - 1)
-    {
-        if (col > 0)
-        {
-            if (world[row + 1][col - 1])
-                num++;
-        }
-        if (world[row + 1][col])
-            num++;
-        if (col < maxCol - 1)
-        {
-            if (world[row + 1][col + 1])
-                num++;
-        }
-    }
-
-    return num;
-  }
 
   function loadWorld() {
     const nextWorld = world.slice();
@@ -127,38 +127,42 @@ export default function Home() {
   }
 
   return (
-    <main className="game">
-      <div className="game-board">
+    <main>
+      <div className="full-width">
         <h1>LifeGame</h1>
-        <Board world={world} setWorld={setWorld} onPlay={handlePlay} />
+      </div>
+      <div className="board">
+        <Board world={world} onPlay={handlePlay} />
       </div>
       <div className="game-info">
-        <button onClick={() => start()}>Start</button>
-        <button onClick={() => stop()}>Stop</button>
+        <button className='button-3' onClick={() => start()}>Start</button>
+        <button className='button-3' onClick={() => stop()}>Stop</button>
       </div>
     </main>
   )
 }
 
-function Board({world, setWorld}) {
+function Board({world, onPlay}) {
 
-  function click(row: number, col: number) {
+  function click(row, col) {
     console.log( row + ', ' + col);
 
     const nextWorld = world.slice();
 
     nextWorld[row][col] = 'X';
 
-    setWorld(nextWorld);
+    onPlay(nextWorld);
   }
 
+  console.log('Board:');
   console.log(world);
 
   return (
-    <div className="grid">
+    <div className="board">
       {world.map((item, index) => {
+        const key = index * 100 + 100;
         return (
-          <div className="board-row">
+          <div className="board-row" key={key}>
             {item.map((subItem, sIndex) => {
               const key = (index * 10) + sIndex;
               return ( <Square val={subItem} key={key} click={() => click(index, sIndex)} /> );
@@ -179,27 +183,27 @@ function Square({ val, click }) {
 }
 
 class Point {
-  x: number;
-  y: number;
+  x;
+  y;
 
-  constructor(x: number, y:number) {
+  constructor(x, y) {
     this.x = x;
     this.y = y;
   }
 
-  setX(x: number) {
+  setX(x) {
     this.x = x;
   }
 
-  getX(): number {
+  getX() {
     return this.x;
   }
 
-  setY(y: number) {
+  setY(y) {
     this.y = y;
   }
 
-  getY(): number {
+  getY() {
     return this.y;
   }
 }
